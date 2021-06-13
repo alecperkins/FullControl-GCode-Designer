@@ -1,0 +1,23 @@
+.scope {
+    display: flex;
+    align-items: center;
+    fieldset, legend {
+        display: inline-block;
+    }
+    legend {
+        text-align: left;
+        width: auto;
+    }
+    input {
+        width: 100px;
+    }
+}
+
+.field {
+    display: inline-flex;
+    flex-direction: column-reverse;
+}
+
+.labelText {
+    display: block;
+}
