@@ -39,6 +39,46 @@ export function addLineCartesian (): LineCartesianAttributes {
     }
 }
 
+
+
+export interface LineEquationPolarAttributes extends BaseFeature {
+    type: 'LineEquationPolar';
+    X: string;
+    Y: string;
+    AngleF: string;
+    RadialF: string;
+    ZF: string;
+    Tstart: string;
+    Tend: string;
+    NumSegments: string;
+    mode: 'Print' | 'Travel';
+    NomWidth: string;
+    NomHeight: string;
+    // E EvalueOverride
+    // F SpeedOverride
+    // T ToolNumber
+}
+
+export function addLineEquationPolar (): LineEquationPolarAttributes {
+    return {
+        type: 'LineEquationPolar',
+        id: Math.random().toString(), // TODO: ULID?,
+        comments: '',
+        X: '',
+        Y: '',
+        AngleF: '',
+        RadialF: '',
+        ZF: '',
+        Tstart: '',
+        Tend: '',
+        NumSegments: '',
+        mode: 'Print',
+        NomWidth: '0.45',
+        NomHeight: '0.2',
+    }
+}
+
+
 // export class LineCartesian implements LineCartesianAttributes {
 
 //     name = 'LineCartesian';

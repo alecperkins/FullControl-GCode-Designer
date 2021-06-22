@@ -3,12 +3,11 @@ import logo from "./logo.svg";
 import styles from "./App.module.scss";
 import Button from "react-bootstrap/Button";
 import { features } from "process";
-import LineCartesianForm from "./components/LineCartesianForm";
+import LineCartesianForm, { LineEquationPolarForm } from "./components/LineCartesianForm";
 
-import { addLineCartesian } from "./features";
+import { addLineCartesian, addLineEquationPolar } from "./features";
 import featuresToGCode from "./featuresToGCode";
 import { deleteData, putData, useData } from "./data";
-import { mutate } from "swr";
 import { useState } from "react";
 import Preview from "./Preview";
 
@@ -19,11 +18,25 @@ function FeatureRow (props: { feature_id: string, onRemove: any }) {
     await putData(`/features/${ props.feature_id }`, update);
     feature_req.mutate();
   }
+  let content: any;
+
+  console.log(feature_req.data?.type);
+
+  if (feature_req.data) {
+    if (feature_req.data.type === 'LineEquationPolar') {
+      content = <LineEquationPolarForm feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+    } else {
+      content = <LineCartesianForm feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+    }
+  } else {
+    content = 'Loading...';
+  }
+
   return (
     <li>
-      { props.feature_id }<br />
+      { props.feature_id } { feature_req.data?.type }<br />
       {
-        feature_req.data && <LineCartesianForm feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+        content
       }
       <label>enabled <input type="checkbox" checked /></label>
       <Button onClick={ () => props.onRemove(props.feature_id) }>Remove</Button>
@@ -48,8 +61,8 @@ export default function App () {
   const features_req = useData("/features");
   const [gcode, setGcode] = useState('');
 
-  async function addFeature () {
-    const new_feature = addLineCartesian();
+  async function addFeature (fn: any) {
+    const new_feature = fn();
     await putData(`/features/${ new_feature.id }`, new_feature);
     console.log('added');
     features_req.mutate();
@@ -72,8 +85,10 @@ export default function App () {
   }
 
   async function generateGCode () {
+    const start = Date.now();
     const new_gcode = await featuresToGCode(features_req.data);
     setGcode(new_gcode);
+    console.log(Date.now() - start, 'ms gcode');
   }
 
   console.log('App', features_req.data);
@@ -87,7 +102,8 @@ export default function App () {
     <div className={ styles.scope }>
       <div className={ styles.editor }>
         <FeatureList features={ features_req.data } onRemove={ removeFeature } />
-        <Button variant="secondary" onClick={ addFeature }>Add Line (Cartesian)</Button> { /* TODO: copy previous end coordinates */}
+        <Button variant="secondary" onClick={ () => addFeature(addLineCartesian) }>Add Line (Cartesian)</Button> { /* TODO: copy previous end coordinates */}
+        <Button variant="secondary" onClick={ () => addFeature(addLineEquationPolar) }>Add Line Eq (Polar)</Button> { /* TODO: copy previous end coordinates */}
       </div>
       <div className={ styles.preview }>
         <Button variant="primary" onClick={ generateGCode }>Generate GCode</Button>
