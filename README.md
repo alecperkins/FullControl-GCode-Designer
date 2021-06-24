@@ -14,3 +14,14 @@ webworker for gcode generation
     <Line x1={ 12.2 } />
 </Repeat>
 <LinePolar r={ 4 }>
+
+
+
+
+{
+    "name": "Design name",
+    "notes": "arbitrary notes",
+    "features": [...features],
+    "params": {},
+    "machine": {},
+}

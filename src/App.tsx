@@ -3,9 +3,8 @@ import logo from "./logo.svg";
 import styles from "./App.module.scss";
 import Button from "react-bootstrap/Button";
 import { features } from "process";
-import LineCartesianForm, { LineEquationPolarForm } from "./components/LineCartesianForm";
 
-import { addLineCartesian, addLineEquationPolar } from "./features";
+import { AllFeatureTypes, LineCartesian, LineEquationPolar } from "./features";
 import featuresToGCode from "./featuresToGCode";
 import { deleteData, putData, useData } from "./data";
 import { useState } from "react";
@@ -20,13 +19,13 @@ function FeatureRow (props: { feature_id: string, onRemove: any }) {
   }
   let content: any;
 
-  console.log(feature_req.data?.type);
-
   if (feature_req.data) {
-    if (feature_req.data.type === 'LineEquationPolar') {
-      content = <LineEquationPolarForm feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+    if (feature_req.data.type === LineEquationPolar.type) {
+      content = <LineEquationPolar.Form feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+    } else if (feature_req.data.type === LineCartesian.type) {
+      content = <LineCartesian.Form feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
     } else {
-      content = <LineCartesianForm feature={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+      content = `Unknown feature type ${ feature_req.data.type }`;
     }
   } else {
     content = 'Loading...';
@@ -61,23 +60,12 @@ export default function App () {
   const features_req = useData("/features");
   const [gcode, setGcode] = useState('');
 
-  async function addFeature (fn: any) {
-    const new_feature = fn();
+  async function addFeature (feature_type: AllFeatureTypes) {
+    const new_feature = feature_type.create();
     await putData(`/features/${ new_feature.id }`, new_feature);
     console.log('added');
     features_req.mutate();
   }
-
-  // function updateFeature (id: string, change: Partial<LineCartesian>) {
-  //   setFeatures((prev) => {
-  //     return prev.map(f => {
-  //       if (f.id === id) {
-  //         f.update(change);
-  //       }
-  //       return f;
-  //     });
-  //   });
-  // }
 
   async function removeFeature (id: string) {
     await deleteData(`/features/${ id }`);
@@ -102,8 +90,8 @@ export default function App () {
     <div className={ styles.scope }>
       <div className={ styles.editor }>
         <FeatureList features={ features_req.data } onRemove={ removeFeature } />
-        <Button variant="secondary" onClick={ () => addFeature(addLineCartesian) }>Add Line (Cartesian)</Button> { /* TODO: copy previous end coordinates */}
-        <Button variant="secondary" onClick={ () => addFeature(addLineEquationPolar) }>Add Line Eq (Polar)</Button> { /* TODO: copy previous end coordinates */}
+        <Button variant="secondary" onClick={ () => addFeature(LineCartesian) }>Add Line (Cartesian)</Button> { /* TODO: copy previous end coordinates */}
+        <Button variant="secondary" onClick={ () => addFeature(LineEquationPolar) }>Add Line Eq (Polar)</Button> { /* TODO: copy previous end coordinates */}
       </div>
       <div className={ styles.preview }>
         <Button variant="primary" onClick={ generateGCode }>Generate GCode</Button>
