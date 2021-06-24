@@ -1,11 +1,29 @@
 
 import useSWR from "swr";
 
-const data: any = {
+function loadData (def: any) {
+    let d;
+    try {
+        d = JSON.parse(window.localStorage.getItem('data') as string)
+    } catch (error) {
+    }
+    d = d || def;
+    return d;
+}
+
+const data: any = loadData({
     features: {},
     feature_list: [],
-};
-(window as any).data = data;
+});
+
+let save_timeout;
+function saveData () {
+    clearTimeout(save_timeout as any);
+    save_timeout = setTimeout(() => {
+        window.localStorage.setItem('data', JSON.stringify(data));
+    }, 1000);
+}
+
 
 export function getData (key: string) {
     console.log(`GET ${ key }`);
@@ -52,6 +70,7 @@ export function putData (key: string, payload: any) {
             return Promise.reject(err);
         }
     }
+    saveData();
     return Promise.resolve(payload);
 }
 
@@ -62,6 +81,7 @@ export function deleteData (key) {
             if (parts[2]) {
                 delete data.features[parts[2]];
                 data.feature_list = data.feature_list.filter(id => id !== parts[2]);
+                saveData();
                 return Promise.resolve();
             };
             break;

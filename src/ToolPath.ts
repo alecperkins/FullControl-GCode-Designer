@@ -1,3 +1,4 @@
+import { PrusaMini } from "./printers";
 
 interface Point { x: number; y: number; z: number }
 
@@ -77,7 +78,11 @@ export default class ToolPath {
 
     toGCode () {
         // TODO: start_code, end_code
-        return this.lines.join('\n');
+        return [
+            PrusaMini.start,
+            ...this.lines,
+            PrusaMini.end,
+        ].join('\n');
     }
 
     setMachine () {} // sets start and end code, extrusion

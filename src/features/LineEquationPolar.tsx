@@ -48,30 +48,31 @@ export default class LineEquationPolar {
 
     static evaluate (feature: LineEquationPolarAttributes, toolpath: ToolPath) {
 
-        const x1 = toolpath.x;
-        const y1 = toolpath.y;
-        const z1 = toolpath.z;
-
-        let x2 = x1;
-        let y2 = y1;
-        let z2 = z1;
-
         const Tstart = parseFloat(feature.Tstart);
         const Tend = parseFloat(feature.Tend);
         const num_segments = parseFloat(feature.NumSegments);
         const Tstep = (Tend - Tstart) / num_segments;
         
+        const cx = parseFloat(feature.X);
+        const cy = parseFloat(feature.Y);
         const AngleF = feature.AngleF;
         const RadialF = feature.RadialF;
         const ZF = feature.ZF;
         const w = parseFloat(feature.NomWidth);
         const h = parseFloat(feature.NomHeight);
+        console.log({ cx, cy, AngleF, RadialF, ZF, w, h });
         // const E // TODO: E value, F value
         
         const parser = new Parser();
 
         let Zval = toolpath.z;
+        let x1 = toolpath.x;
+        let y1 = toolpath.y;
+        let z1 = toolpath.z;
 
+        let x2 = x1;
+        let y2 = y1;
+        let z2 = z1;
         for (let Tval = Tstart; Tval < Tend; Tval += Tstep) {
             parser.setVariable("Tval", Tval);
             parser.setVariable("Zval", Zval);
@@ -82,13 +83,16 @@ export default class LineEquationPolar {
             Zval = parser.parse(ZF).result;
             // TODO: E F T
             // TODO: use Decimal.js, printer precision
-            x2 = Rval * Math.cos(Aval);
-            y2 = Rval * Math.sin(Aval);
+            x2 = cx + Rval * Math.cos(Aval);
+            y2 = cy + Rval * Math.sin(Aval);
             z2 = Zval;
             const length = Math.pow(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2), 0.5);
             const e = length * w * h * toolpath.extrusion_multiplier;
 
             toolpath.extrudeTo({ x: x2, y: y2, z: z2 }, e);
+            x1 = x2;
+            y1 = y2;
+            z1 = z2;
         }
     }
 
