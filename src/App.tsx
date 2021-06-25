@@ -1,14 +1,14 @@
 import React from "react";
-import logo from "./logo.svg";
 import styles from "./App.module.scss";
 import Button from "react-bootstrap/Button";
-import { features } from "process";
 
 import { AllFeatureTypes, LineCartesian, LineEquationPolar } from "./features";
 import featuresToGCode from "./featuresToGCode";
 import { deleteData, putData, useData } from "./data";
 import { useState } from "react";
 import Preview from "./Preview";
+import Variable from "./features/Variable";
+import { features } from "process";
 
 
 function FeatureRow (props: { feature_id: string, onRemove: any }) {
@@ -43,8 +43,31 @@ function FeatureRow (props: { feature_id: string, onRemove: any }) {
   );
 }
 
+function VariableRow (props: { variable_id: string, onRemove: any }) {
+  const feature_req = useData(`/variables/${ props.variable_id }`);
+  async function onChange (update) {
+    await putData(`/variables/${ props.variable_id }`, update);
+    feature_req.mutate();
+  }
+  let content: any;
+
+  if (feature_req.data) {
+    content = <Variable.Form variable={ feature_req.data } onChange={ onChange } onRemove={ props.onRemove } />
+  } else {
+    content = 'Loading...';
+  }
+
+  return (
+    <li>
+      {
+        content
+      }
+      <Button onClick={ () => props.onRemove(props.variable_id) }>Remove</Button>
+    </li>
+  );
+}
+
 function FeatureList (props: { features: Array<string>, onRemove: any }) {
-  console.log('FeatureList', props.features);
   return (
     <ol>
       {
@@ -56,14 +79,26 @@ function FeatureList (props: { features: Array<string>, onRemove: any }) {
   )
 }
 
+function VariableList (props: { variables: Array<string>, onRemove: any }) {
+  return (
+    <ol>
+      {
+        props.variables.map(variable_id => (
+          <VariableRow key={ variable_id } variable_id={ variable_id } onRemove={ () => props.onRemove(variable_id) } />
+        ))
+      }
+    </ol>
+  )
+}
+
 export default function App () {
   const features_req = useData("/features");
+  const variables_req = useData("/variables");
   const [gcode, setGcode] = useState('');
 
   async function addFeature (feature_type: AllFeatureTypes) {
     const new_feature = feature_type.create();
     await putData(`/features/${ new_feature.id }`, new_feature);
-    console.log('added');
     features_req.mutate();
   }
 
@@ -72,22 +107,37 @@ export default function App () {
     features_req.mutate();
   }
 
+  async function addVariable () {
+    const new_feature = Variable.create();
+    await putData(`/variables/${ new_feature.id }`, new_feature);
+    variables_req.mutate();
+  }
+
+  async function removeVariable (id: string) {
+    await deleteData(`/variables/${ id }`);
+    features_req.mutate();
+  }
+
   async function generateGCode () {
     const start = Date.now();
-    const new_gcode = await featuresToGCode(features_req.data);
+    const new_gcode = await featuresToGCode();
     setGcode(new_gcode);
     console.log(Date.now() - start, 'ms gcode');
   }
 
   console.log('App', features_req.data);
 
-  if (!features_req.data) {
+  if (!features_req.data || !variables_req.data) {
     return <div>Loading…</div>;
   }
 
 
   return (
     <div className={ styles.scope }>
+      <div>
+        <VariableList variables={ variables_req.data } onRemove={ removeVariable } />
+        <Button onClick={ addVariable }>Add Variable</Button>
+      </div>
       <div className={ styles.editor }>
         <FeatureList features={ features_req.data } onRemove={ removeFeature } />
         <Button variant="secondary" onClick={ () => addFeature(LineCartesian) }>Add Line (Cartesian)</Button> { /* TODO: copy previous end coordinates */}

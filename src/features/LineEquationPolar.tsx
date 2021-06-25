@@ -4,6 +4,7 @@ import { Parser } from "hot-formula-parser";
 import Field from "./Field";
 
 import styles from '../components/LineCartesianForm.module.scss'; // TODO: relocate
+import { ParamSet } from "./Param";
 
 export interface LineEquationPolarAttributes extends BaseFeatureAttributes {
     X: string;
@@ -20,6 +21,11 @@ export interface LineEquationPolarAttributes extends BaseFeatureAttributes {
     // F SpeedOverride
     // T ToolNumber
 }
+
+const constants = [
+    { name: 'pi', value: Math.PI },
+    { name: 'tau', value: Math.PI * 2 },
+]
 
 export default class LineEquationPolar {
 
@@ -46,7 +52,7 @@ export default class LineEquationPolar {
         });
     }
 
-    static evaluate (feature: LineEquationPolarAttributes, toolpath: ToolPath) {
+    static evaluate (feature: LineEquationPolarAttributes, toolpath: ToolPath, params: ParamSet) {
 
         const Tstart = parseFloat(feature.Tstart);
         const Tend = parseFloat(feature.Tend);
@@ -65,6 +71,14 @@ export default class LineEquationPolar {
         
         const parser = new Parser();
 
+        constants.forEach(({ name, value }) => {
+            parser.setParam(name, value);
+        });
+
+        params.forEach(({ name, value }) => {
+            parser.setParam(name, value);
+        });
+
         let Zval = toolpath.z;
         let x1 = toolpath.x;
         let y1 = toolpath.y;
@@ -74,12 +88,12 @@ export default class LineEquationPolar {
         let y2 = y1;
         let z2 = z1;
         for (let Tval = Tstart; Tval < Tend; Tval += Tstep) {
-            parser.setVariable("Tval", Tval);
-            parser.setVariable("Zval", Zval);
+            parser.setParam("Tval", Tval);
+            parser.setParam("Zval", Zval);
             const Aval = parser.parse(AngleF).result;
             const Rval = parser.parse(RadialF).result;
-            parser.setVariable("Aval", Aval);
-            parser.setVariable("Rval", Rval);
+            parser.setParam("Aval", Aval);
+            parser.setParam("Rval", Rval);
             Zval = parser.parse(ZF).result;
             // TODO: E F T
             // TODO: use Decimal.js, printer precision
@@ -121,15 +135,15 @@ export default class LineEquationPolar {
                     <legend>Formulas</legend>
                     <label className={ styles.field }>
                         <span className={ styles.labelText }>Angle F</span>
-                        <Field value={ line.AngleF } name='AngleF' placeholder='' onBlur={ (e: any) => onChange({ AngleF: e.target.value }) }/>
+                        <Field as='textarea' value={ line.AngleF } name='AngleF' placeholder='' onBlur={ (e: any) => onChange({ AngleF: e.target.value }) }/>
                     </label>
                     <label className={ styles.field }>
                         <span className={ styles.labelText }>Radius F</span>
-                        <Field value={ line.RadialF } name='RadialF' placeholder='' onBlur={ (e: any) => onChange({ RadialF: e.target.value }) }/>
+                        <Field as='textarea' value={ line.RadialF } name='RadialF' placeholder='' onBlur={ (e: any) => onChange({ RadialF: e.target.value }) }/>
                     </label>
                     <label className={ styles.field }>
                         <span className={ styles.labelText }>Z F</span>
-                        <Field value={ line.ZF } name='ZF' placeholder='' onBlur={ (e: any) => onChange({ ZF: e.target.value }) }/>
+                        <Field as='textarea' value={ line.ZF } name='ZF' placeholder='' onBlur={ (e: any) => onChange({ ZF: e.target.value }) }/>
                     </label>
     
                 </fieldset>

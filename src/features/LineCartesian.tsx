@@ -3,6 +3,7 @@ import { BaseFeatureAttributes, createFeature } from "./BaseFeature";
 import Field from "./Field";
 
 import styles from '../components/LineCartesianForm.module.scss'; // TODO: relocate
+import { ParamSet } from "./Param";
 
 export interface LineCartesianAttributes extends BaseFeatureAttributes {
     X1: string;
@@ -52,7 +53,7 @@ export default class LineCartesian {
         });
     }
 
-    static evaluate (feature: LineCartesianAttributes, toolpath: ToolPath) {
+    static evaluate (feature: LineCartesianAttributes, toolpath: ToolPath, params: ParamSet) {
 
         feature.X1 = feature.X1 || this.defaults.X1;
         feature.Y1 = feature.Y1 || this.defaults.Y1;
@@ -60,6 +61,8 @@ export default class LineCartesian {
         feature.X2 = feature.X2 || this.defaults.X2;
         feature.Y2 = feature.Y2 || this.defaults.Y2;
         feature.Z2 = feature.Z2 || this.defaults.Z2;
+
+        // TODO: make _every_ field parsed, with params
 
         const x1 = feature.X1[0] === "R" ? toolpath.x + parseFloat(feature.X1.slice(1)) : parseFloat(feature.X1);
         const y1 = feature.Y1[0] === "R" ? toolpath.y + parseFloat(feature.Y1.slice(1)) : parseFloat(feature.Y1);
@@ -69,7 +72,7 @@ export default class LineCartesian {
         const z2 = feature.Z2[0] === "R" ? z1 + parseFloat(feature.Z2.slice(1)) : parseFloat(feature.Z2);
         const w = parseFloat(feature.NomWidth);
         const h = parseFloat(feature.NomHeight);
-        const f = feature.TravelSpeed ? parseFloat(feature.TravelSpeed) : null;
+        // const f = feature.TravelSpeed ? parseFloat(feature.TravelSpeed) : null;
 
         // Calculate volume of extrusion
         const length = Math.pow(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2), 0.5);

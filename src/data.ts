@@ -14,6 +14,8 @@ function loadData (def: any) {
 const data: any = loadData({
     features: {},
     feature_list: [],
+    params: {},
+    param_list: [],
 });
 
 let save_timeout;
@@ -35,6 +37,14 @@ export function getData (key: string) {
                 res = {...data.features[parts[2]]}
             } else {
                 res = Array.from(data.feature_list);
+            };
+            break;
+        }
+        case 'params': {
+            if (parts[2]) {
+                res = {...data.params[parts[2]]}
+            } else {
+                res = Array.from(data.param_list);
             };
             break;
         }
@@ -64,6 +74,17 @@ export function putData (key: string, payload: any) {
             };
             break;
         }
+        case 'params': {
+            if (parts[2]) {
+                if (!data.params[parts[2]]) {
+                    data.param_list.push(payload.id);
+                }
+                data.params[parts[2]] = {...payload};
+            } else {
+                data.param_list = Array.from(payload);
+            };
+            break;
+        }
         default: {
             const err: any = new Error();
             err.status = 404;
@@ -81,6 +102,15 @@ export function deleteData (key) {
             if (parts[2]) {
                 delete data.features[parts[2]];
                 data.feature_list = data.feature_list.filter(id => id !== parts[2]);
+                saveData();
+                return Promise.resolve();
+            };
+            break;
+        }
+        case 'params': {
+            if (parts[2]) {
+                delete data.params[parts[2]];
+                data.param_list = data.param_list.filter(id => id !== parts[2]);
                 saveData();
                 return Promise.resolve();
             };
